@@ -1,0 +1,289 @@
+openapi: 3.0.3
+info:
+  title: Online Bookstore API
+  description: API for managing book inventory, purchases, and customer loyalty points
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:8080'
+    description: Local development server
+
+tags:
+  - name: books
+    description: Book management operations
+  - name: purchases
+    description: Purchase operations
+  - name: loyalty
+    description: Customer loyalty points operations
+
+paths:
+  /api/v1/books:
+    get:
+      tags:
+        - books
+      summary: Get all available books
+      operationId: getBooks
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [NEW_RELEASE, REGULAR, OLD_EDITION]
+      responses:
+        '200':
+          description: List of books
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookDTO'
+    post:
+      tags:
+        - books
+      summary: Add a new book
+      operationId: addBook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookRequest'
+      responses:
+        '201':
+          description: Book created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDTO'
+
+  /api/v1/books/{id}:
+    put:
+      tags:
+        - books
+      summary: Update book details
+      operationId: updateBook
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBookRequest'
+      responses:
+        '200':
+          description: Book updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDTO'
+    delete:
+      tags:
+        - books
+      summary: Delete a book
+      operationId: deleteBook
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Book deleted
+
+  /api/v1/purchases:
+    post:
+      tags:
+        - purchases
+      summary: Purchase books
+      operationId: purchaseBooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchaseRequest'
+      responses:
+        '200':
+          description: Purchase completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseResponse'
+
+  /api/v1/customers/{customerId}/loyalty-points:
+    get:
+      tags:
+        - loyalty
+      summary: Get customer loyalty points
+      operationId: getLoyaltyPoints
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Customer loyalty points
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoyaltyPointsDTO'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    BookDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        author:
+          type: string
+        isbn:
+          type: string
+        type:
+          type: string
+          enum: [NEW_RELEASE, REGULAR, OLD_EDITION]
+        basePrice:
+          type: number
+          format: double
+        availableQuantity:
+          type: integer
+
+    CreateBookRequest:
+      type: object
+      required:
+        - title
+        - author
+        - isbn
+        - type
+        - basePrice
+        - availableQuantity
+      properties:
+        title:
+          type: string
+        author:
+          type: string
+        isbn:
+          type: string
+        type:
+          type: string
+          enum: [NEW_RELEASE, REGULAR, OLD_EDITION]
+        basePrice:
+          type: number
+          format: double
+        availableQuantity:
+          type: integer
+
+    UpdateBookRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        author:
+          type: string
+        isbn:
+          type: string
+        type:
+          type: string
+          enum: [NEW_RELEASE, REGULAR, OLD_EDITION]
+        basePrice:
+          type: number
+          format: double
+        availableQuantity:
+          type: integer
+
+    PurchaseRequest:
+      type: object
+      required:
+        - customerId
+        - items
+      properties:
+        customerId:
+          type: string
+          format: uuid
+        items:
+          type: array
+          items:
+            type: object
+            required:
+              - bookId
+              - quantity
+            properties:
+              bookId:
+                type: string
+                format: uuid
+              quantity:
+                type: integer
+        useLoyaltyPoints:
+          type: boolean
+          default: false
+
+    PurchaseResponse:
+      type: object
+      properties:
+        purchaseId:
+          type: string
+          format: uuid
+        customerId:
+          type: string
+          format: uuid
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              bookId:
+                type: string
+                format: uuid
+              quantity:
+                type: integer
+              pricePerUnit:
+                type: number
+                format: double
+        subtotal:
+          type: number
+          format: double
+        discount:
+          type: number
+          format: double
+        total:
+          type: number
+          format: double
+        loyaltyPointsEarned:
+          type: integer
+        loyaltyPointsUsed:
+          type: integer
+
+    LoyaltyPointsDTO:
+      type: object
+      properties:
+        customerId:
+          type: string
+          format: uuid
+        points:
+          type: integer
+        canRedeemFreeBook:
+          type: boolean
+
+security:
+  - bearerAuth: []
