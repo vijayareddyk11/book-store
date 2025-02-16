@@ -27,7 +27,7 @@ The **Design Decisions** section now includes explanations for points 2 to 5, co
  **Clone the Repository**:
    Clone this repository to your local machine using Git:
    ```bash
-   git clone https://github.com/your-username/bookstore-api.git 
+   git clone https://github.com/vijayareddyk11/book-store.git 
    
    mvn clean install
     
